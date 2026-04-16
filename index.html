@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Età della Restaurazione (1815–1831) – Mappa Interattiva</title>
+<style>
+  :root {
+    --bg: #f7f4ef;
+    --card: #ffffff;
+    --primary: #3b2a1a;
+    --accent: #8b3a2a;
+    --accent2: #2a5c8b;
+    --accent3: #2a6b45;
+    --accent4: #6b2a7a;
+    --border: #d6cfc4;
+    --muted: #6b5f52;
+    --highlight: #f5e9d7;
+    --tag-bg: #e9ddd0;
+    --shadow: rgba(59,42,26,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--primary);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: linear-gradient(135deg, #2a1a0a 0%, #5c3520 60%, #8b3a2a 100%);
+    color: #f5e9d7;
+    padding: 2.2rem 2rem 1.6rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+  }
+  header h1 {
+    font-size: clamp(1.4rem, 4vw, 2.4rem);
+    letter-spacing: 0.06em;
+    font-weight: 700;
+    position: relative;
+  }
+  header p {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    opacity: 0.8;
+    letter-spacing: 0.04em;
+    font-style: italic;
+    position: relative;
+  }
+  .header-dates {
+    display: inline-block;
+    margin-top: 0.8rem;
+    background: rgba(245,233,215,0.15);
+    border: 1px solid rgba(245,233,215,0.3);
+    padding: 0.3rem 1.2rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    letter-spacing: 0.1em;
+    position: relative;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 0 1.2rem 2rem;
+  }
+
+  /* ── MAP AREA ── */
+  .map-section {
+    margin-top: 1.8rem;
+    background: var(--card);
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 18px var(--shadow);
+    overflow: hidden;
+  }
+  .map-title {
+    padding: 1rem 1.4rem 0.8rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .map-title span { font-size: 1.3rem; }
+
+  /* SVG MAP */
+  .map-container {
+    position: relative;
+    background: #e8f0f8;
+    cursor: default;
+    overflow: hidden;
+  }
+  .map-container svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Map tooltips */
+  .map-tooltip {
+    display: none;
+    position: absolute;
+    background: #fffef9;
+    border: 1.5px solid var(--accent);
+    border-radius: 8px;
+    padding: 0.7rem 1rem;
+    font-size: 0.82rem;
+    max-width: 240px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    pointer-events: none;
+    z-index: 100;
+    line-height: 1.5;
+  }
+  .map-tooltip.visible { display: block; }
+  .map-tooltip strong { color: var(--accent); font-size: 0.9rem; }
+
+  /* Map pins */
+  .map-pin {
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .map-pin:hover { transform: scale(1.25); }
+  .map-pin circle { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+
+  /* Legend */
+  .map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7rem 1.4rem;
+    padding: 0.8rem 1.4rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; }
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN GRID ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1.4rem;
+    margin-top: 1.4rem;
+  }
+  @media (max-width: 800px) {
+    .main-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ── SIDEBAR NAV ── */
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.75rem 1rem;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Georgia', serif;
+    font-size: 0.83rem;
+    color: var(--primary);
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px var(--shadow);
+  }
+  .nav-btn:hover {
+    border-color: var(--accent);
+    background: var(--highlight);
+    transform: translateX(3px);
+  }
+  .nav-btn.active {
+    border-color: var(--accent);
+    background: var(--highlight);
+    font-weight: 700;
+    color: var(--accent);
+    box-shadow: 0 2px 10px rgba(139,58,42,0.15);
+  }
+  .nav-icon { font-size: 1.3rem; flex-shrink: 0; }
+  .nav-label { line-height: 1.3; }
+  .nav-sub { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+  /* ── CONTENT PANEL ── */
+  .content-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: 0 2px 18px var(--shadow);
+    overflow: hidden;
+  }
+  .panel-section {
+    display: none;
+    padding: 1.5rem 1.6rem 1.8rem;
+  }
+  .panel-section.active { display: block; }
+
+  .panel-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .panel-subtitle {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.2rem;
+    font-style: italic;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* Cards inside panels */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1rem;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+  .card:hover {
+    box-shadow: 0 4px 16px var(--shadow);
+    transform: translateY(-2px);
+  }
+  .card h3 {
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .card p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .card .tag {
+    display: inline-block;
+    margin-top: 0.6rem;
+    background: var(--tag-bg);
+    color: var(--accent);
+    font-size: 0.68rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-style: italic;
+  }
+
+  /* Timeline */
+  .timeline { margin-top: 0.8rem; }
+  .tl-item {
+    display: grid;
+    grid-template-columns: 68px 1fr;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    position: relative;
+  }
+  .tl-item::before {
+    content: '';
+    position: absolute;
+    left: 34px;
+    top: 28px;
+    bottom: -16px;
+    width: 2px;
+    background: var(--border);
+  }
+  .tl-item:last-child::before { display: none; }
+  .tl-year {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 0.4rem 0.2rem;
+    height: fit-content;
+    position: relative;
+    z-index: 1;
+  }
+  .tl-year.blue { background: var(--accent2); }
+  .tl-year.green { background: var(--accent3); }
+  .tl-year.purple { background: var(--accent4); }
+  .tl-content h4 { font-size: 0.88rem; margin-bottom: 0.2rem; }
+  .tl-content p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+
+  /* Comparison table */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.8rem;
+  }
+  .compare-table th {
+    background: var(--highlight);
+    color: var(--accent);
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+    border: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+  .compare-table td {
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--primary);
+    line-height: 1.5;
+  }
+  .compare-table tr:nth-child(even) td { background: #faf8f5; }
+
+  /* Principle boxes */
+  .principle-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.9rem;
+    margin-top: 1rem;
+  }
+  .p-box {
+    border-radius: 10px;
+    padding: 1rem;
+    border-left: 4px solid;
+  }
+  .p-box.red { border-color: var(--accent); background: #fdf0ec; }
+  .p-box.blue { border-color: var(--accent2); background: #ecf3fd; }
+  .p-box.green { border-color: var(--accent3); background: #ecf7f0; }
+  .p-box.purple { border-color: var(--accent4); background: #f5ecfd; }
+  .p-box h4 { font-size: 0.82rem; margin-bottom: 0.35rem; }
+  .p-box p { font-size: 0.76rem; color: var(--muted); line-height: 1.5; }
+
+  /* Quote */
+  blockquote {
+    background: var(--highlight);
+    border-left: 4px solid var(--accent);
+    padding: 0.9rem 1.2rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1rem 0;
+    font-style: italic;
+    font-size: 0.83rem;
+    color: #4a3520;
+    line-height: 1.6;
+  }
+  blockquote cite {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.73rem;
+    color: var(--muted);
+    font-style: normal;
+  }
+
+  /* ── SOURCES ── */
+  .sources-section {
+    margin-top: 1.4rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.2rem 1.6rem;
+    box-shadow: 0 2px 10px var(--shadow);
+  }
+  .sources-section h2 {
+    font-size: 0.95rem;
+    color: var(--accent2);
+    margin-bottom: 0.8rem;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .source-list { list-style: none; }
+  .source-list li {
+    font-size: 0.76rem;
+    color: var(--muted);
+    padding: 0.35rem 0;
+    border-bottom: 1px dotted var(--border);
+    line-height: 1.5;
+  }
+  .source-list li:last-child { border-bottom: none; }
+  .source-list a {
+    color: var(--accent2);
+    text-decoration: none;
+    word-break: break-all;
+  }
+  .source-list a:hover { text-decoration: underline; }
+  .src-badge {
+    display: inline-block;
+    background: #e8f0fd;
+    color: var(--accent2);
+    font-size: 0.65rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 10px;
+    margin-right: 0.3rem;
+    font-weight: 700;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.73rem;
+    color: var(--muted);
+    padding: 1.5rem 1rem;
+    border-top: 1px solid var(--border);
+    margin-top: 1.4rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ L'Età della Restaurazione</h1>
+  <p>Mappa concettuale interattiva per lo studio della storia europea dell'Ottocento</p>
+  <div class="header-dates">1815 — 1831</div>
+</header>
+
+<div class="wrapper">
+
+  <!-- ── MAPPA GEOGRAFICA SVG ── -->
+  <div class="map-section">
+    <div class="map-title"><span>🌍</span> Europa dopo il Congresso di Vienna (1815)</div>
+    <div class="map-container" id="mapContainer">
+      <svg viewBox="0 0 900 520" xmlns="http://www.w3.org/2000/svg" id="euroMap">
+        <!-- Sea background -->
+        <rect width="900" height="520" fill="#cfe4f5"/>
+
+        <!-- ── SIMPLIFIED COUNTRY SHAPES ── -->
+        <!-- Russia -->
+        <path d="M620,30 L900,30 L900,300 L780,280 L740,220 L680,200 L650,150 L610,130 Z" fill="#d4c5b0" stroke="#b0a090" stroke-width="1"/>
+        <text x="790" y="130" font-size="12" fill="#5a4a3a" font-family="Georgia" font-style="italic">Russia</text>
+
+        <!-- Scandinavia -->
+        <path d="M500,30 L560,30 L580,80 L560,130 L530,160 L500,140 L480,100 L490,60 Z" fill="#c8d8b0" stroke="#a0b090" stroke-width="1"/>
+        <text x="510" y="95" font-size="10" fill="#3a4a2a" font-family="Georgia" font-style="italic">Norvegia/Svezia</text>
+
+        <!-- Denmark -->
+        <path d="M490,155 L510,155 L515,175 L490,175 Z" fill="#c8d8b0" stroke="#a0b090" stroke-width="1"/>
+
+        <!-- Prussia / German Confederation -->
+        <path d="M510,170 L650,170 L650,240 L600,260 L540,250 L510,230 Z" fill="#d8c8a0" stroke="#b0a070" stroke-width="1"/>
+        <text x="555" y="215" font-size="10" fill="#4a3a1a" font-family="Georgia" font-style="italic">Confederazione</text>
+        <text x="560" y="228" font-size="10" fill="#4a3a1a" font-family="Georgia" font-style="italic">Germanica</text>
+
+        <!-- Austria / Habsburg -->
+        <path d="M540,250 L650,240 L680,260 L680,310 L610,330 L560,310 L530,290 Z" fill="#e0c890" stroke="#c0a860" stroke-width="1"/>
+        <text x="585" y="290" font-size="11" fill="#4a3000" font-family="Georgia" font-style="italic">Austria</text>
+
+        <!-- France -->
+        <path d="M380,190 L500,190 L510,230 L490,280 L450,310 L390,300 L360,260 L365,220 Z" fill="#a8c8e8" stroke="#7898b8" stroke-width="1"/>
+        <text x="415" y="255" font-size="12" fill="#1a3050" font-family="Georgia" font-style="italic">Francia</text>
+
+        <!-- Spain -->
+        <path d="M300,310 L430,310 L440,370 L410,410 L340,420 L290,390 L280,350 Z" fill="#f0d080" stroke="#c0a850" stroke-width="1"/>
+        <text x="345" y="368" font-size="12" fill="#4a3800" font-family="Georgia" font-style="italic">Spagna</text>
+
+        <!-- Portugal -->
+        <path d="M270,330 L300,330 L305,390 L280,395 L265,360 Z" fill="#f8e090" stroke="#c8b060" stroke-width="1"/>
+        <text x="265" y="362" font-size="9" fill="#4a3800" font-family="Georgia" font-style="italic">Port.</text>
+
+        <!-- Great Britain -->
+        <path d="M340,100 L380,80 L400,110 L390,160 L360,180 L335,165 L325,130 Z" fill="#c0d8f0" stroke="#90b8d0" stroke-width="1"/>
+        <text x="343" y="135" font-size="10" fill="#1a3050" font-family="Georgia" font-style="italic">Gran</text>
+        <text x="338" y="148" font-size="10" fill="#1a3050" font-family="Georgia" font-style="italic">Bretagna</text>
+
+        <!-- Netherlands / Belgium -->
+        <path d="M415,170 L480,170 L480,195 L415,195 Z" fill="#b8d0e8" stroke="#90b0c8" stroke-width="1"/>
+        <text x="428" y="186" font-size="9" fill="#1a3050" font-family="Georgia" font-style="italic">P. Bassi/Belgio</text>
+
+        <!-- Italy (divided) -->
+        <!-- Lombardo-Veneto (Austrian) -->
+        <path d="M490,290 L560,290 L570,320 L530,340 L490,325 Z" fill="#e0c890" stroke="#c0a860" stroke-width="1"/>
+        <text x="495" y="313" font-size="8.5" fill="#4a3000" font-family="Georgia" font-style="italic">Lomb.-Veneto</text>
+        <!-- Piedmont / Sardinia -->
+        <path d="M420,295 L490,295 L490,325 L460,345 L420,335 L410,315 Z" fill="#d8b890" stroke="#b09870" stroke-width="1"/>
+        <text x="428" y="320" font-size="8.5" fill="#3a2800" font-family="Georgia" font-style="italic">Piemonte</text>
+        <!-- Central Italy -->
+        <path d="M460,345 L530,340 L540,390 L510,420 L470,415 L450,380 Z" fill="#e8d0a0" stroke="#c0a870" stroke-width="1"/>
+        <text x="468" y="380" font-size="8.5" fill="#4a3800" font-family="Georgia" font-style="italic">Stato della</text>
+        <text x="470" y="393" font-size="8.5" fill="#4a3800" font-family="Georgia" font-style="italic">Chiesa</text>
+        <!-- Kingdom of Two Sicilies -->
+        <path d="M450,415 L520,415 L540,455 L510,480 L460,475 L440,450 Z" fill="#e8c890" stroke="#c0a860" stroke-width="1"/>
+        <text x="455" y="450" font-size="8.5" fill="#4a3800" font-family="Georgia" font-style="italic">Regno Due Sicilie</text>
+
+        <!-- Ottoman Empire -->
+        <path d="M640,300 L780,300 L800,380 L760,430 L680,440 L620,400 L610,350 Z" fill="#d0b8a0" stroke="#a89070" stroke-width="1"/>
+        <text x="680" y="375" font-size="11" fill="#4a3020" font-family="Georgia" font-style="italic">Impero Ottomano</text>
+
+        <!-- Greece -->
+        <path d="M610,390 L670,390 L680,430 L640,450 L605,430 Z" fill="#98c898" stroke="#70a870" stroke-width="1"/>
+        <text x="618" y="418" font-size="9" fill="#1a4a1a" font-family="Georgia" font-style="italic">Grecia</text>
+
+        <!-- Poland (divided) -->
+        <path d="M570,160 L640,160 L650,200 L610,210 L565,195 Z" fill="#c8b8d0" stroke="#a898b0" stroke-width="1"/>
+        <text x="580" y="185" font-size="9" fill="#3a2850" font-family="Georgia" font-style="italic">Polonia</text>
+
+        <!-- Switzerland -->
+        <path d="M450,250 L510,250 L510,280 L450,280 Z" fill="#d8e8c0" stroke="#a8c090" stroke-width="1"/>
+        <text x="455" y="269" font-size="9" fill="#2a4a1a" font-family="Georgia" font-style="italic">Svizzera</text>
+
+        <!-- ── INTERACTIVE PINS ── -->
+        <!-- Vienna -->
+        <g class="map-pin" data-tip="vienna" transform="translate(607,263)">
+          <circle r="11" fill="#8b3a2a" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="11">★</text>
+        </g>
+        <text x="622" y="262" font-size="9" fill="#8b3a2a" font-weight="bold" font-family="Georgia">Vienna</text>
+
+        <!-- Paris -->
+        <g class="map-pin" data-tip="paris" transform="translate(418,232)">
+          <circle r="11" fill="#2a5c8b" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="11">⚑</text>
+        </g>
+        <text x="432" y="231" font-size="9" fill="#2a5c8b" font-weight="bold" font-family="Georgia">Parigi</text>
+
+        <!-- Naples -->
+        <g class="map-pin" data-tip="naples" transform="translate(502,435)">
+          <circle r="10" fill="#a05020" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">⚡</text>
+        </g>
+        <text x="515" y="434" font-size="9" fill="#a05020" font-weight="bold" font-family="Georgia">Napoli</text>
+
+        <!-- Turin -->
+        <g class="map-pin" data-tip="torino" transform="translate(437,313)">
+          <circle r="10" fill="#a05020" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">⚡</text>
+        </g>
+        <text x="450" y="312" font-size="9" fill="#a05020" font-weight="bold" font-family="Georgia">Torino</text>
+
+        <!-- Cadiz -->
+        <g class="map-pin" data-tip="cadice" transform="translate(295,388)">
+          <circle r="10" fill="#a05020" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">⚡</text>
+        </g>
+        <text x="308" y="387" font-size="9" fill="#a05020" font-weight="bold" font-family="Georgia">Cadice</text>
+
+        <!-- Greece/Athens -->
+        <g class="map-pin" data-tip="grecia" transform="translate(638,415)">
+          <circle r="10" fill="#2a6b45" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">✦</text>
+        </g>
+        <text x="650" y="414" font-size="9" fill="#2a6b45" font-weight="bold" font-family="Georgia">Atene</text>
+
+        <!-- St. Petersburg -->
+        <g class="map-pin" data-tip="russia" transform="translate(715,75)">
+          <circle r="10" fill="#6b2a7a" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">❄</text>
+        </g>
+        <text x="728" y="74" font-size="9" fill="#6b2a7a" font-weight="bold" font-family="Georgia">S. Pietroburgo</text>
+
+        <!-- London -->
+        <g class="map-pin" data-tip="londra" transform="translate(360,143)">
+          <circle r="10" fill="#2a5c8b" stroke="#fff" stroke-width="2"/>
+          <text x="0" y="5" text-anchor="middle" fill="white" font-size="10">⚑</text>
+        </g>
+        <text x="373" y="142" font-size="9" fill="#2a5c8b" font-weight="bold" font-family="Georgia">Londra</text>
+
+        <!-- Troppau -->
+        <g class="map-pin" data-tip="troppau" transform="translate(607,228)">
+          <circle r="9" fill="#555" stroke="#fff" stroke-width="1.5"/>
+          <text x="0" y="4" text-anchor="middle" fill="white" font-size="9">⚙</text>
+        </g>
+        <text x="618" y="227" font-size="8" fill="#444" font-family="Georgia">Troppau</text>
+
+      </svg>
+
+      <!-- Tooltip -->
+      <div class="map-tooltip" id="mapTooltip"></div>
+    </div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#8b3a2a"></div><span>★ Sede del Congresso di Vienna</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2a5c8b"></div><span>⚑ Potenza liberale</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a05020"></div><span>⚡ Moto insurrezionale</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2a6b45"></div><span>✦ Indipendenza (1829-1831)</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6b2a7a"></div><span>❄ Moto decabrista 1825</span></div>
+      <div class="legend-item"><div class="legend-dot" style="background:#555"></div><span>⚙ Congressi della S. Alleanza</span></div>
+    </div>
+  </div>
+
+  <!-- ── MAIN GRID ── -->
+  <div class="main-grid">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <button class="nav-btn active" data-section="overview">
+        <span class="nav-icon">🏛️</span>
+        <div class="nav-label">Il Congresso di Vienna<br><span class="nav-sub">1814–1815</span></div>
+      </button>
+      <button class="nav-btn" data-section="principi">
+        <span class="nav-icon">⚖️</span>
+        <div class="nav-label">I Principi<br><span class="nav-sub">Restaurazione & equilibrio</span></div>
+      </button>
+      <button class="nav-btn" data-section="bilancio">
+        <span class="nav-icon">📊</span>
+        <div class="nav-label">Bilancio del Congresso<br><span class="nav-sub">Aspetti + e –</span></div>
+      </button>
+      <button class="nav-btn" data-section="romanticismo">
+        <span class="nav-icon">🎭</span>
+        <div class="nav-label">Romanticismo & Nazione<br><span class="nav-sub">Cultura e politica</span></div>
+      </button>
+      <button class="nav-btn" data-section="ideologie">
+        <span class="nav-icon">📜</span>
+        <div class="nav-label">Ideologie politiche<br><span class="nav-sub">Liberalismo & Democrazia</span></div>
+      </button>
+      <button class="nav-btn" data-section="moti20">
+        <span class="nav-icon">⚡</span>
+        <div class="nav-label">Moti del 1820–21<br><span class="nav-sub">Prime rivolte</span></div>
+      </button>
+      <button class="nav-btn" data-section="moti30">
+        <span class="nav-icon">🔥</span>
+        <div class="nav-label">Moti del 1830–31<br><span class="nav-sub">Seconda ondata</span></div>
+      </button>
+      <button class="nav-btn" data-section="cronologia">
+        <span class="nav-icon">📅</span>
+        <div class="nav-label">Cronologia<br><span class="nav-sub">1814–1848</span></div>
+      </button>
+    </nav>
+
+    <!-- CONTENT PANELS -->
+    <div class="content-panel">
+
+      <!-- OVERVIEW -->
+      <div class="panel-section active" id="sec-overview">
+        <div class="panel-title">🏛️ Il Congresso di Vienna</div>
+        <div class="panel-subtitle">1814–1815 · Le grandi potenze ridisegnano l'Europa dopo Napoleone</div>
+        <div class="card-grid">
+          <div class="card">
+            <h3>🗓️ Contesto</h3>
+            <p>Dopo la sconfitta di Napoleone, le potenze vincitrici (Austria, Prussia, Russia, Gran Bretagna, Francia) si riunirono a Vienna per ristabilire l'ordine in Europa e cancellare le trasformazioni rivoluzionarie.</p>
+            <span class="tag">Settembre 1814 – giugno 1815</span>
+          </div>
+          <div class="card">
+            <h3>🎯 Obiettivo principale</h3>
+            <p>Restaurare i monarchi legittimi e l'equilibrio tra le grandi potenze, impedendo che una sola potenza dominasse l'Europa come aveva fatto Napoleone.</p>
+            <span class="tag">Legittimismo & equilibrio</span>
+          </div>
+          <div class="card">
+            <h3>🗺️ Ridisegno dell'Italia</h3>
+            <p>Il Lombardo-Veneto agli Asburgo. Parma, Modena e Toscana a sovrani imparentati con gli Asburgo. Piemonte, Stato della Chiesa e Regno delle Due Sicilie a sovrani assolutistici alleati dell'Austria.</p>
+            <span class="tag">Dominio austriaco sulla penisola</span>
+          </div>
+          <div class="card">
+            <h3>🇩🇪 La Germania</h3>
+            <p>Il Sacro Romano Impero non viene ripristinato. Si forma la <strong>Confederazione Germanica</strong> di 39 Stati (da 360), con una maggiore omogeneità territoriale.</p>
+            <span class="tag">Da 360 a 39 stati</span>
+          </div>
+          <div class="card">
+            <h3>🐻 La Russia</h3>
+            <p>Passa da 30 a 50 milioni di abitanti, acquisendo Finlandia, Bessarabia e i tre quarti della Polonia con Varsavia.</p>
+            <span class="tag">Grande potenza orientale</span>
+          </div>
+          <div class="card">
+            <h3>🦅 La Prussia</h3>
+            <p>Accresce il territorio da 190 a 280.000 km², ottenendo parte della Sassonia, la Pomerania svedese, la regione del Reno e il bacino della Ruhr.</p>
+            <span class="tag">Espansione verso occidente</span>
+          </div>
+        </div>
+        <blockquote>
+          «I nuovi assetti geopolitici dell'Europa furono decisi in base a calcoli dinastici, economici e strategici. Intere regioni furono spostate da uno stato all'altro senza riguardo per le tradizioni nazionali.»
+          <cite>— Dalle lezioni sull'Età della Restaurazione</cite>
+        </blockquote>
+      </div>
+
+      <!-- PRINCIPI -->
+      <div class="panel-section" id="sec-principi">
+        <div class="panel-title">⚖️ I Principi del Congresso</div>
+        <div class="panel-subtitle">I tre pilastri ideologici della Restaurazione e la Santa Alleanza</div>
+        <div class="principle-row">
+          <div class="p-box red">
+            <h4>👑 Legittimità</h4>
+            <p>I sovrani deposti da Napoleone vengono restaurati sul trono in virtù del loro «diritto legittimo» dinastico. Il potere discende dall'alto (da Dio), non dal popolo.</p>
+          </div>
+          <div class="p-box blue">
+            <h4>⚖️ Equilibrio</h4>
+            <p>Nessuna potenza deve dominare l'Europa. Le grandi potenze devono mantenere un equilibrio di forze che garantisca la pace. In pratica, prevale sul principio di legittimità.</p>
+          </div>
+          <div class="p-box green">
+            <h4>🛡️ Intervento</h4>
+            <p>Le potenze della Santa Alleanza si riservano il diritto di intervenire militarmente in qualsiasi Stato in cui scoppi una rivolta liberale o nazionale. «Gendarme d'Europa».</p>
+          </div>
+          <div class="p-box purple">
+            <h4>✝️ Santa Alleanza</h4>
+            <p>Fondata nel 1815 da Austria, Prussia e Russia, è lo strumento del principio di intervento. Reprime i moti del '20-'21 e del '30-'31 con l'uso degli eserciti.</p>
+          </div>
+        </div>
+        <div class="card-grid" style="margin-top:1.2rem">
+          <div class="card">
+            <h3>🤝 Quadruplice Alleanza (1815)</h3>
+            <p>Austria, Prussia, Russia e Gran Bretagna si accordano per mantenere l'ordine viennese. Diversa dalla Quadruplice Alleanza liberale del 1833.</p>
+          </div>
+          <div class="card">
+            <h3>🏛️ «Concerto Europeo»</h3>
+            <p>Il sistema di consultazione tra grandi potenze che assicurò all'Europa 39 anni di pace relativa, fino alla Guerra di Crimea (1854–1856).</p>
+            <span class="tag">Stabilità internazionale</span>
+          </div>
+          <div class="card">
+            <h3>📜 Congressi di Troppau e Lubiana</h3>
+            <p>Nel 1820-1821 le potenze della Santa Alleanza riaffermano il principio di intervento e inviano eserciti per reprimere i moti in Italia e Spagna.</p>
+            <span class="tag">1820–1821</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BILANCIO -->
+      <div class="panel-section" id="sec-bilancio">
+        <div class="panel-title">📊 Bilancio del Congresso di Vienna</div>
+        <div class="panel-subtitle">Aspetti negativi, positivi e conseguenze per il futuro</div>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>❌ Aspetti negativi</th>
+              <th>✅ Aspetti positivi</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Violazione del principio di <strong>sovranità popolare</strong>: restaurazione dell'assolutismo e del legittimismo</td>
+              <td><strong>Semplificazione</strong> della carta d'Europa: stati più razionali e omogenei (da 360 a 39 nella zona germanica)</td>
+            </tr>
+            <tr>
+              <td>Violazione del principio di <strong>nazionalità</strong>: popoli spostati tra stati senza riguardo per tradizioni e identità culturale</td>
+              <td>Lungo periodo di <strong>pace e stabilità</strong>: il «concerto europeo» garantì 39 anni di pace fino alla guerra di Crimea (1854)</td>
+            </tr>
+            <tr>
+              <td>Violazione del principio di <strong>autonomia degli stati</strong>: principio di intervento → la Santa Alleanza come «gendarme d'Europa»</td>
+              <td><strong>Condanna della tratta degli schiavi</strong> e avvio (formale) del processo di abolizione dello schiavismo</td>
+            </tr>
+            <tr>
+              <td>Ignorati i principi di libertà, uguaglianza e fraternità della Rivoluzione francese</td>
+              <td>Mantenimento delle <strong>riforme giuridiche napoleoniche</strong>: eguaglianza davanti alla legge, abolizione dei privilegi nobiliari</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="margin-top:1.2rem">
+          <h4 style="font-size:0.9rem; color:var(--accent); margin-bottom:0.6rem">⚡ Conseguenze: nascita dell'opposizione</h4>
+          <div class="principle-row">
+            <div class="p-box red"><h4>🤫 Società segrete</h4><p>Carboneria in Italia (e poi in Francia e Spagna). Federati in Piemonte. Eterìa in Grecia. Opposizione clandestina con obiettivi insurrezionali.</p></div>
+            <div class="p-box blue"><h4>🗳️ Movimenti liberali</h4><p>In paesi dove la nazionalità non era violata (Francia, Spagna) ma la libertà politica sì: richiesta di Costituzioni e monarchia costituzionale.</p></div>
+            <div class="p-box green"><h4>🏴 Movimenti liberal-nazionalisti</h4><p>In Italia, Germania, Polonia: violati sia la libertà che il principio di nazionalità → lotta per indipendenza e unità nazionale.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROMANTICISMO -->
+      <div class="panel-section" id="sec-romanticismo">
+        <div class="panel-title">🎭 Romanticismo e Idea di Nazione</div>
+        <div class="panel-subtitle">La cultura dominante dell'Ottocento e la sua influenza politica</div>
+        <div class="card-grid">
+          <div class="card">
+            <h3>🇩🇪 Origini germaniche</h3>
+            <p>Il Romanticismo nasce in Germania (fine '700) con lo <em>Sturm und Drang</em> di Goethe e Schiller. Poi definizione teorica con Schlegel, Fichte e Schelling.</p>
+          </div>
+          <div class="card">
+            <h3>🇬🇧 Gran Bretagna</h3>
+            <p>Coleridge, Wordsworth e Walter Scott portano il Romanticismo nelle isole britanniche con poesia e romanzo storico.</p>
+          </div>
+          <div class="card">
+            <h3>🇫🇷 Francia e Italia</h3>
+            <p>Dal 1813, per opera di Madame de Staël. In Italia accende il dibattito tra romantici e classicisti, centrato sulla rivista milanese <em>Il Conciliatore</em>.</p>
+          </div>
+          <div class="card">
+            <h3>⚔️ Romanticismo e politica</h3>
+            <p>Fu fonte d'ispirazione sia per i reazionari legittimisti (tradizione, autorità, passato) sia per i liberali e democratici (libertà, autodeterminazione, individuo).</p>
+          </div>
+        </div>
+        <div style="margin-top:1.2rem">
+          <h4 style="font-size:0.9rem; color:var(--accent); margin-bottom:0.6rem">🏳️ L'evoluzione dell'idea di Nazione</h4>
+          <div class="principle-row">
+            <div class="p-box blue"><h4>Basso Medioevo</h4><p>«Nazione» = luogo di nascita e provenienza. Significato generico, geografico.</p></div>
+            <div class="p-box green"><h4>Illuminismo (Rousseau)</h4><p>«Comunità di cittadini che esprimono collettivamente la propria volontà». Prima idea moderna.</p></div>
+            <div class="p-box red"><h4>Prima metà '800</h4><p>«Comunità naturale e indissolubile»: stessa etnia, lingua, cultura. Principio fondante dello Stato-Nazione. Contributo del Romanticismo.</p></div>
+            <div class="p-box purple"><h4>Prima metà '900: Nazionalismo</h4><p>Proclamazione della superiorità assoluta di un popolo sugli altri. Obiettivo: egemonia imperiale. Ben diverso dal sentimento nazionale.</p></div>
+          </div>
+        </div>
+        <blockquote>
+          «Se voi sparite nella vostra essenza, tutto il genere umano perderà la speranza di potersi un giorno salvare dalla profondità dei suoi mali.»
+          <cite>— J.G. Fichte, <em>Discorsi alla nazione tedesca</em> (1807–1808)</cite>
+        </blockquote>
+      </div>
+
+      <!-- IDEOLOGIE -->
+      <div class="panel-section" id="sec-ideologie">
+        <div class="panel-title">📜 Ideologie Politiche a Confronto</div>
+        <div class="panel-subtitle">Liberalismo moderato vs. Democrazia radicale nell'Ottocento</div>
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Tema</th>
+              <th>🔵 Pensiero Liberale</th>
+              <th>🔴 Pensiero Democratico</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><strong>Potere statale</strong></td><td>Limitato, separazione dei poteri</td><td>Limitato ma con rappresentanza allargata</td></tr>
+            <tr><td><strong>Voto</strong></td><td>Suffragio censitario (solo ai proprietari)</td><td>Suffragio universale</td></tr>
+            <tr><td><strong>Forma di governo</strong></td><td>Monarchia costituzionale</td><td>Repubblica democratica</td></tr>
+            <tr><td><strong>Proprietà privata</strong></td><td>Diritto fondamentale, disuguaglianza naturale</td><td>Disuguaglianza causata da fattori sociali</td></tr>
+            <tr><td><strong>Ruolo dello Stato</strong></td><td>Neutrale, non interviene nell'economia</td><td>Deve rimuovere ostacoli allo sviluppo dei deboli</td></tr>
+            <tr><td><strong>Istruzione</strong></td><td>Elitaria</td><td>Democratica, per tutti</td></tr>
+            <tr><td><strong>Tassazione</strong></td><td>Minore e per chi produce</td><td>Proporzionale ai redditi</td></tr>
+            <tr><td><strong>Base sociale</strong></td><td>Alta borghesia, aristocrazia liberale</td><td>Piccola borghesia, intellettuali, operai</td></tr>
+          </tbody>
+        </table>
+        <div class="card-grid" style="margin-top:1.2rem">
+          <div class="card">
+            <h3>🇮🇹 Giuseppe Mazzini</h3>
+            <p>Fondatore della <strong>Giovine Italia</strong> (1831). Propugna l'unità italiana come repubblica democratica fondata sul principio di nazionalità. Dopo il fallimento dei moti del '31 ripensa la strategia rivoluzionaria.</p>
+            <span class="tag">Democratico-nazionalista</span>
+          </div>
+          <div class="card">
+            <h3>📚 Eric Hobsbawm</h3>
+            <p>Lo storico britannico individua tre tendenze dell'opposizione post-1815: liberale moderata (alta borghesia), radical-democratica (piccola borghesia) e socialista (lavoratori e operai).</p>
+            <span class="tag">Storiografia</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTI 1820-21 -->
+      <div class="panel-section" id="sec-moti20">
+        <div class="panel-title">⚡ I Moti del 1820–1821</div>
+        <div class="panel-subtitle">La prima reazione all'ordine viennese: le società segrete all'azione</div>
+        <div class="card-grid">
+          <div class="card">
+            <h3>🇪🇸 Spagna – Cadice (gen. 1820)</h3>
+            <p>Reparti militari in partenza per le colonie si ammutinano sotto generali delle società segrete. Ferdinando VII concede la Costituzione del 1812. <em>1823: intervento francese della S. Alleanza ripristina l'assolutismo.</em></p>
+            <span class="tag">Rivolta militare → repressa</span>
+          </div>
+          <div class="card">
+            <h3>🇮🇹 Napoli (estate 1820)</h3>
+            <p>Reparti borbonici si ammutinano sotto il Gen. Guglielmo Pepe. Ferdinando I concede la Costituzione. <em>Marzo 1821: esercito austriaco sconfigge i ribelli e ripristina il potere assoluto.</em></p>
+            <span class="tag">Carboneria · repressa dall'Austria</span>
+          </div>
+          <div class="card">
+            <h3>🇮🇹 Piemonte (marzo 1821)</h3>
+            <p>I Federati (Santarosa, Confalonieri) organizzano l'ammutinamento con l'appoggio iniziale di Carlo Alberto. Vittorio Emanuele I abdica. Carlo Alberto poi ritira l'appoggio. <em>Aprile: sconfitta dei ribelli.</em></p>
+            <span class="tag">Carboneria · Federati · repressa</span>
+          </div>
+          <div class="card">
+            <h3>🇵🇹 Portogallo</h3>
+            <p>Giovanni VI costretto a concedere la Costituzione. Avvio instabile del costituzionalismo portoghese, che porterà a decenni di conflitti tra liberali e assolutisti.</p>
+            <span class="tag">Costituzione concessa</span>
+          </div>
+          <div class="card">
+            <h3>🇷🇺 Russia – Moto decabrista (1825)</h3>
+            <p>Ufficiali liberali tentano un colpo di stato alla morte dello zar Alessandro I. Brutalmente represso dallo zar Nicola I. Prima rivolta liberale russa.</p>
+            <span class="tag">1825 · repressa</span>
+          </div>
+          <div class="card">
+            <h3>🇬🇷 Grecia – Caso speciale (1821)</h3>
+            <p>La rivolta organizzata dall'<em>Eterìa</em> mobilitò tutto il popolo greco contro l'Impero Ottomano. Lord Byron combatte e muore per la causa. <em>1829: Pace di Adrianopoli → indipendenza greca.</em></p>
+            <span class="tag">✅ Unico successo</span>
+          </div>
+        </div>
+        <div style="margin-top:1.2rem">
+          <h4 style="font-size:0.9rem; color:var(--accent); margin-bottom:0.6rem">❓ Ragioni del fallimento</h4>
+          <div class="principle-row">
+            <div class="p-box red"><h4>Superiorità militare</h4><p>Gli eserciti della Santa Alleanza erano numericamente e tecnicamente superiori ai ribelli.</p></div>
+            <div class="p-box blue"><h4>Carattere regionale</h4><p>Moti isolati, senza coordinamento nazionale o internazionale tra i diversi movimenti.</p></div>
+            <div class="p-box green"><h4>Mancanza di massa</h4><p>Assente il coinvolgimento della popolazione. Rivoluzioni di élite (militari, intellettuali, borghesia).</p></div>
+            <div class="p-box purple"><h4>Divisioni interne</h4><p>Divergenze tra democratici radicali e liberali moderati; mancanza di chiarezza programmatica.</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MOTI 1830-31 -->
+      <div class="panel-section" id="sec-moti30">
+        <div class="panel-title">🔥 I Moti del 1830–1831</div>
+        <div class="panel-subtitle">La seconda ondata rivoluzionaria e i nuovi equilibri europei</div>
+        <div class="card-grid">
+          <div class="card">
+            <h3>🇫🇷 Francia – Luglio 1830</h3>
+            <p>Carlo X emana le <strong>Quattro Ordinanze</strong>: abolisce la Costituzione, elimina la libertà di stampa, restringe il voto a 25.000 elettori, scioglie il Parlamento. I liberali insorgono: tre giorni di combattimenti («Tre Gloriose»). Carlo X abdica.</p>
+            <span class="tag">Luigi Filippo d'Orléans · monarchia costituzionale</span>
+          </div>
+          <div class="card">
+            <h3>🇧🇪 Belgio – 1830-31</h3>
+            <p>Rivoluzione nazionale contro la dominazione olandese. Il Belgio ottiene l'indipendenza e diventa monarchia costituzionale.</p>
+            <span class="tag">✅ Indipendenza conquistata</span>
+          </div>
+          <div class="card">
+            <h3>🇵🇱 Polonia</h3>
+            <p>Rivolta contro la dominazione russa. Brutalmente repressa dallo zar Nicola I. La Polonia perde anche il limitato statuto autonomo che le era stato concesso nel 1815.</p>
+            <span class="tag">❌ Repressa dalla Russia</span>
+          </div>
+          <div class="card">
+            <h3>🇨🇭 Svizzera</h3>
+            <p>Molti cantoni ottengono costituzioni democratiche sull'onda delle rivoluzioni europee del 1830.</p>
+            <span class="tag">✅ Riforme costituzionali</span>
+          </div>
+          <div class="card">
+            <h3>🇮🇹 Italia – Moti del '31</h3>
+            <p>Insurrezioni a Modena e nelle Legazioni pontificie, organizzate anche da Ciro Menotti. L'Austria interviene e reprime tutto. Il fallimento spinse Mazzini a fondare la <strong>Giovine Italia</strong>.</p>
+            <span class="tag">❌ Repressa · fondazione Giovine Italia</span>
+          </div>
+          <div class="card">
+            <h3>🤝 Nuovi equilibri (1833)</h3>
+            <p>La Santa Alleanza ribadisce il principio d'intervento. In risposta, <strong>Francia, Gran Bretagna, Spagna e Portogallo</strong> formano la Quadruplice Alleanza liberale a difesa dei regimi costituzionali.</p>
+            <span class="tag">Spaccatura dell'Europa</span>
+          </div>
+        </div>
+        <blockquote>
+          «Nel 1848-49 i liberali moderati dell'Europa occidentale fecero due importanti scoperte: che la rivoluzione era pericolosa, e che, per ottenere soddisfazione ad alcune delle loro principali richieste, se ne poteva fare a meno. La borghesia cessò di essere una forza rivoluzionaria.»
+          <cite>— Eric J. Hobsbawm, storico, Università di Londra</cite>
+        </blockquote>
+      </div>
+
+      <!-- CRONOLOGIA -->
+      <div class="panel-section" id="sec-cronologia">
+        <div class="panel-title">📅 Cronologia 1814–1848</div>
+        <div class="panel-subtitle">Gli eventi chiave dall'età della Restaurazione alle rivoluzioni del '48</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-year">1814</div>
+            <div class="tl-content"><h4>Inizio del Congresso di Vienna</h4><p>Le grandi potenze si riuniscono per ridisegnare l'Europa dopo Napoleone. Luigi XVIII di Francia concede la prima Costituzione (<em>Charte octroyée</em>).</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year">1815</div>
+            <div class="tl-content"><h4>Santa Alleanza e nuovo ordine europeo</h4><p>Austria, Prussia e Russia fondano la Santa Alleanza. Il Congresso di Vienna chiude i lavori. Inizia ufficialmente l'Età della Restaurazione.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year blue">1820</div>
+            <div class="tl-content"><h4>Moti in Spagna e nel Regno delle Due Sicilie</h4><p>Rivolta di Cadice. Ammutinamento napoletano del Gen. Pepe. Congresso di Troppau: la S. Alleanza decide di intervenire.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year blue">1821</div>
+            <div class="tl-content"><h4>Moti in Piemonte e inizio della guerra greca</h4><p>Rivolta piemontese (Santarosa, Confalonieri). Scoppio della rivoluzione greca organizzata dall'Eterìa. Congresso di Lubiana.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year purple">1825</div>
+            <div class="tl-content"><h4>Moto Decabrista in Russia</h4><p>Ufficiali liberali russi tentano un colpo di Stato. Nicola I reprime brutalmente. Prima rivolta liberale nella storia russa.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year green">1829</div>
+            <div class="tl-content"><h4>Indipendenza della Grecia</h4><p>Pace di Adrianopoli: la Grecia ottiene l'indipendenza dall'Impero Ottomano. Anche Serbia, Valacchia e Moldavia ottengono autonomia.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year">1830</div>
+            <div class="tl-content"><h4>Rivoluzioni in Francia, Belgio e oltre</h4><p>«Tre Gloriose» di Luglio a Parigi: Carlo X abdica, sale Luigi Filippo d'Orléans. Indipendenza del Belgio. Moti in Polonia, Svizzera, Germania, Spagna, Portogallo.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year blue">1831</div>
+            <div class="tl-content"><h4>Moti in Italia e fondazione della Giovine Italia</h4><p>Insurrezioni a Modena e nelle Legazioni pontificie, represse dall'Austria. Mazzini fonda la Giovine Italia a Marsiglia. Il Belgio diventa pienamente indipendente.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-year green">1848</div>
+            <div class="tl-content"><h4>La «Primavera dei popoli» e lo Statuto Albertino</h4><p>Ondata rivoluzionaria in tutta Europa. Carlo Alberto concede lo Statuto Albertino (4 marzo). Prima Guerra d'Indipendenza italiana contro l'Austria.</p></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content-panel -->
+  </div><!-- /main-grid -->
+
+  <!-- ── FONTI ── -->
+  <div class="sources-section">
+    <h2>📚 Fonti e riferimenti bibliografici</h2>
+    <ul class="source-list">
+      <li><span class="src-badge">.edu</span> <strong>Yale Law School – Avalon Project</strong>: testo originale dei trattati del Congresso di Vienna (1815) e della Santa Alleanza. <a href="https://avalon.law.yale.edu/19th_century/peace.asp" target="_blank">avalon.law.yale.edu</a></li>
+      <li><span class="src-badge">.edu</span> <strong>Fordham University – Internet History Sourcebooks</strong> (Paul Halsall): fonti primarie sull'Età della Restaurazione, Fichte, Mazzini. <a href="https://sourcebooks.fordham.edu/mod/modsbook.asp" target="_blank">sourcebooks.fordham.edu</a></li>
+      <li><span class="src-badge">.edu</span> <strong>Stanford Encyclopedia of Philosophy</strong>: voci «Romanticism», «Nationalism», «Liberalism» per l'inquadramento filosofico dei movimenti dell'800. <a href="https://plato.stanford.edu" target="_blank">plato.stanford.edu</a></li>
+      <li><span class="src-badge">.edu</span> <strong>Columbia University – Encyclopedia of 1848 Revolutions</strong> (J. Chastain ed.): voci dettagliate su ciascun moto nazionale. <a href="https://www.ohio.edu/chastain/ac/carbonar.htm" target="_blank">ohio.edu/chastain</a></li>
+      <li><span class="src-badge">libro</span> <strong>Eric J. Hobsbawm</strong>, <em>The Age of Revolution 1789–1848</em>, Weidenfeld & Nicolson, Londra 1962. Ediz. italiana: Sansoni.</li>
+      <li><span class="src-badge">libro</span> <strong>Christopher Clark</strong>, <em>The Sleepwalkers: How Europe Went to War in 1914</em> (cap. introduttivo sul XIX sec.), Harper 2012.</li>
+      <li><span class="src-badge">primaria</span> <strong>J.G. Fichte</strong>, <em>Reden an die Deutsche Nation</em> [Discorsi alla nazione tedesca], Berlino 1807–1808. Citazione dal 14° discorso.</li>
+      <li><span class="src-badge">primaria</span> <strong>Silvio Pellico</strong>, <em>Le mie prigioni</em> (1832). Memorie del carcere allo Spielberg, documento fondamentale del Risorgimento.</li>
+      <li><span class="src-badge">fonte</span> Materiale didattico: <em>L'Età della Restaurazione – Tra restaurazione e aspirazioni di libertà: l'Ottocento delle nazioni</em> (presentazione allegata, 2024).</li>
+    </ul>
+  </div>
+
+  <footer>
+    Mappa interattiva creata per lo studio dell'Età della Restaurazione (1815–1831) · Fonti dichiarate nella sezione apposita · Uso didattico
+  </footer>
+</div>
+
+<!-- ── TOOLTIP DATA ── -->
+<script>
+const tipData = {
+  vienna: {
+    title: '★ Vienna – Congresso (1814–1815)',
+    text: 'Sede del Congresso che ridisegnò l\'Europa. Qui si affermarono i principi di legittimità, equilibrio e intervento. L\'Austria di Metternich fu il grande regista della Restaurazione.'
+  },
+  paris: {
+    title: '⚑ Parigi – Rivoluzione di luglio 1830',
+    text: 'Le «Tre Gloriose» (27-29 luglio 1830): Carlo X abdica dopo le Quattro Ordinanze. Sale al trono Luigi Filippo d\'Orléans con monarchia costituzionale. L\'onda rivoluzionaria si diffonde in tutta Europa.'
+  },
+  naples: {
+    title: '⚡ Napoli – Moto del 1820',
+    text: 'Estate 1820: il Gen. Guglielmo Pepe guida l\'ammutinamento borbonico. Ferdinando I concede la Costituzione. Marzo 1821: l\'esercito austriaco interviene e ripristina l\'assolutismo.'
+  },
+  torino: {
+    title: '⚡ Torino – Moto del 1821',
+    text: 'I Federati (Santarosa, Confalonieri) con l\'appoggio iniziale di Carlo Alberto. Vittorio Emanuele I abdica per non firmare la Costituzione. Aprile 1821: i ribelli vengono sconfitti dagli eserciti regolari.'
+  },
+  cadice: {
+    title: '⚡ Cadice – Rivolta di gennaio 1820',
+    text: 'Reparti militari si ammutinano prima di salpare per le colonie sudamericane. Ferdinando VII costretto a ripristinare la Costituzione del 1812. Durerà fino all\'intervento francese del 1823.'
+  },
+  grecia: {
+    title: '✦ Grecia – Indipendenza (1821–1829)',
+    text: 'Unico successo del periodo: la rivolta dell\'Eterìa (marzo 1821) ottiene il supporto dell\'opinione pubblica europea e di Lord Byron. Pace di Adrianopoli (1829): indipendenza riconosciuta. Un paese però assegnato a un sovrano bavarese.'
+  },
+  russia: {
+    title: '❄ San Pietroburgo – Moto Decabrista (1825)',
+    text: 'Ufficiali liberali tentano un colpo di Stato alla morte di Alessandro I. Nicola I reprime brutalmente. Prima rivolta liberale della storia russa, ispirata agli ideali della Rivoluzione francese e delle campagne napoleoniche.'
+  },
+  londra: {
+    title: '⚑ Londra – Grande Bretagna liberale',
+    text: 'La Gran Bretagna non aderisce al principio di intervento della Santa Alleanza. Sostiene l\'indipendenza greca con la flotta. Nel 1833 entra nella Quadruplice Alleanza liberale con Francia, Spagna e Portogallo.'
+  },
+  troppau: {
+    title: '⚙ Troppau (1820) & Lubiana (1821)',
+    text: 'Congressi della Santa Alleanza: Austria, Prussia e Russia ribadiscono il principio di intervento e autorizzano l\'invio di eserciti per reprimere i moti in Spagna e Italia.'
+  }
+};
+
+// Pin tooltips
+const tooltip = document.getElementById('mapTooltip');
+const mapContainer = document.getElementById('mapContainer');
+
+document.querySelectorAll('.map-pin').forEach(pin => {
+  pin.addEventListener('mouseenter', e => {
+    const key = pin.dataset.tip;
+    const data = tipData[key];
+    if (!data) return;
+    tooltip.innerHTML = `<strong>${data.title}</strong><br>${data.text}`;
+    tooltip.classList.add('visible');
+  });
+  pin.addEventListener('mousemove', e => {
+    const rect = mapContainer.getBoundingClientRect();
+    let x = e.clientX - rect.left + 12;
+    let y = e.clientY - rect.top - 20;
+    if (x + 250 > rect.width) x = e.clientX - rect.left - 262;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  });
+  pin.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('visible');
+  });
+});
+
+// Navigation
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const sec = btn.dataset.section;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel-section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sec-' + sec).classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
